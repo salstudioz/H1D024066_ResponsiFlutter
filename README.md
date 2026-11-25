@@ -6,7 +6,7 @@ dan penyimpanan lokal **SharedPreferences**.
 
 > **Nama / NIM:** Salma Faizatul Jannah / H1D024066
 
-## Screenshot (iPhone 16 Pro Max Viewport)
+## Screenshot Aplikasi
 
 ### Light Mode
 
@@ -115,4 +115,4 @@ flutter test
 
 ## Video Penjelasan
 
-_Tempel link video di sini._
+
