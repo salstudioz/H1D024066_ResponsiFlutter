@@ -8,6 +8,8 @@ import '../viewmodels/weather_view_model.dart';
 import 'widgets/message_view.dart';
 
 /// Screen 2: Search / Location Screen.
+/// Desain modern dengan dukungan Light Mode & Dark Mode,
+/// search bar berbentuk pill, kartu favorit, dan chip riwayat pencarian.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -52,6 +54,8 @@ class _SearchScreenState extends State<SearchScreen> {
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         content: Text(
           isNowFavorite
               ? '${location.name} ditambahkan ke favorit'
@@ -71,49 +75,88 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<SearchViewModel>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cari Lokasi')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              controller: _controller,
-              autofocus: true,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Masukkan nama kota...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _controller.text.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: 'Hapus teks',
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _controller.clear();
-                          setState(() {});
-                          vm.reset();
-                        },
+      appBar: AppBar(
+        title: const Text('Cari Lokasi'),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            children: [
+              // Pill Search Bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF151C2C) : Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : const Color(0xFFE2E8F0),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: 'Masukkan nama kota...',
+                      hintStyle: TextStyle(
+                        color: isDark
+                            ? const Color(0xFF64748B)
+                            : const Color(0xFF94A3B8),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isDark
+                            ? const Color(0xFF60A5FA)
+                            : const Color(0xFF2563EB),
+                      ),
+                      suffixIcon: _controller.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'Hapus teks',
+                              icon: const Icon(Icons.clear, size: 20),
+                              onPressed: () {
+                                _controller.clear();
+                                setState(() {});
+                                vm.reset();
+                              },
+                            ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                    ),
+                    onChanged: (value) {
+                      setState(() {});
+                      vm.onQueryChanged(value);
+                    },
+                    onSubmitted: vm.search,
+                  ),
                 ),
               ),
-              onChanged: (value) {
-                setState(() {});
-                vm.onQueryChanged(value);
-              },
-              onSubmitted: vm.search,
-            ),
+
+              Expanded(child: _buildContent(vm, isDark)),
+            ],
           ),
-          Expanded(child: _buildContent(vm)),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildContent(SearchViewModel vm) {
+  Widget _buildContent(SearchViewModel vm, bool isDark) {
     switch (vm.state) {
       case ViewState.loading:
         return const Center(child: CircularProgressIndicator());
@@ -134,17 +177,19 @@ class _SearchScreenState extends State<SearchScreen> {
         );
       case ViewState.success:
         return ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: vm.results.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (context, index) => _locationTile(vm, vm.results[index]),
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) =>
+              _locationCard(vm, vm.results[index], isDark),
         );
       case ViewState.initial:
-        return _buildIdle(vm);
+        return _buildIdle(vm, isDark);
     }
   }
 
   /// Kondisi awal: tampilkan favorit dan riwayat pencarian.
-  Widget _buildIdle(SearchViewModel vm) {
+  Widget _buildIdle(SearchViewModel vm, bool isDark) {
     if (vm.favorites.isEmpty && vm.history.isEmpty) {
       return const MessageView(
         icon: Icons.travel_explore,
@@ -154,26 +199,52 @@ class _SearchScreenState extends State<SearchScreen> {
       );
     }
 
-    final theme = Theme.of(context);
     return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
+        // Bagian Favorit
         if (vm.favorites.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Text('Lokasi favorit', style: theme.textTheme.titleMedium),
-          ),
-          for (final fav in vm.favorites) _locationTile(vm, fav),
-        ],
-        if (vm.history.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 8, 4),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               children: [
-                Expanded(
-                  child: Text(
-                    'Riwayat pencarian',
-                    style: theme.textTheme.titleMedium,
-                  ),
+                const Icon(Icons.star, color: Color(0xFFFFD600), size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Lokasi favorit',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          for (final fav in vm.favorites) ...[
+            _locationCard(vm, fav, isDark),
+            const SizedBox(height: 8),
+          ],
+        ],
+
+        // Bagian Riwayat Pencarian
+        if (vm.history.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.history, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Riwayat pencarian',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ],
                 ),
                 TextButton(
                   onPressed: vm.clearHistory,
@@ -182,34 +253,125 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
           ),
-          for (final item in vm.history)
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: Text(item),
-              trailing: IconButton(
-                tooltip: 'Hapus dari riwayat',
-                icon: const Icon(Icons.close),
-                onPressed: () => vm.removeHistory(item),
-              ),
-              onTap: () => _searchFromHistory(item),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in vm.history)
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => _searchFromHistory(item),
+                  child: Container(
+                    padding: const EdgeInsets.only(left: 12, right: 4),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF151C2C)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          item,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        IconButton(
+                          iconSize: 16,
+                          splashRadius: 14,
+                          tooltip: 'Hapus dari riwayat',
+                          icon: const Icon(Icons.close),
+                          onPressed: () => vm.removeHistory(item),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ],
     );
   }
 
-  Widget _locationTile(SearchViewModel vm, LocationModel location) {
+  Widget _locationCard(
+      SearchViewModel vm, LocationModel location, bool isDark) {
     final isFavorite = vm.isFavorite(location);
-    return ListTile(
-      leading: const Icon(Icons.location_city),
-      title: Text(location.name),
-      subtitle: location.subtitle.isEmpty ? null : Text(location.subtitle),
-      trailing: IconButton(
-        tooltip: isFavorite ? 'Hapus dari favorit' : 'Simpan ke favorit',
-        icon: Icon(isFavorite ? Icons.star : Icons.star_border),
-        onPressed: () => _toggleFavorite(location),
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF151C2C) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.07)
+              : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      onTap: () => _selectLocation(location),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isDark
+                ? const Color(0xFF1E283D)
+                : const Color(0xFFEFF6FF),
+          ),
+          child: Icon(
+            Icons.location_city,
+            color: isDark
+                ? const Color(0xFF60A5FA)
+                : const Color(0xFF2563EB),
+            size: 20,
+          ),
+        ),
+        title: Text(
+          location.name,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        subtitle: location.subtitle.isEmpty
+            ? null
+            : Text(
+                location.subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
+                ),
+              ),
+        trailing: IconButton(
+          tooltip: isFavorite ? 'Hapus dari favorit' : 'Simpan ke favorit',
+          icon: Icon(
+            isFavorite ? Icons.star : Icons.star_border,
+            color: isFavorite
+                ? const Color(0xFFFFD600)
+                : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+          ),
+          onPressed: () => _toggleFavorite(location),
+        ),
+        onTap: () => _selectLocation(location),
+      ),
     );
   }
 }

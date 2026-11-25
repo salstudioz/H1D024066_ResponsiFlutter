@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../models/location_model.dart';
 import '../models/weather_model.dart';
@@ -26,11 +26,21 @@ class WeatherViewModel extends ChangeNotifier {
   WeatherModel? _weather;
   String _errorMessage = '';
   int _requestId = 0;
+  ThemeMode _themeMode = ThemeMode.light;
 
   ViewState get state => _state;
   LocationModel? get location => _location;
   WeatherModel? get weather => _weather;
   String get errorMessage => _errorMessage;
+  ThemeMode get themeMode => _themeMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  /// Mengganti tema (Light <-> Dark mode).
+  void toggleTheme() {
+    _themeMode =
+        _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    notifyListeners();
+  }
 
   /// Dipanggil saat aplikasi dibuka: tampilkan kembali lokasi terakhir.
   Future<void> init() async {

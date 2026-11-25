@@ -31,13 +31,17 @@ class MyApp extends StatelessWidget {
           create: (_) => SearchViewModel(repository)..loadLocalData(),
         ),
       ],
-      child: MaterialApp(
-        title: 'Aplikasi Cuaca',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.system,
-        home: const HomeScreen(),
+      child: Consumer<WeatherViewModel>(
+        builder: (context, weatherVm, _) {
+          return MaterialApp(
+            title: 'Aplikasi Cuaca',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: weatherVm.themeMode,
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }
