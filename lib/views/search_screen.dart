@@ -247,7 +247,32 @@ class _SearchScreenState extends State<SearchScreen> {
                   ],
                 ),
                 TextButton(
-                  onPressed: vm.clearHistory,
+                  onPressed: () {
+                    showDialog<void>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                        title: const Text('Hapus Riwayat?'),
+                        content: const Text(
+                            'Seluruh riwayat pencarian kota akan dibersihkan.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: const Text('Batal'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(ctx).pop();
+                              vm.clearHistory();
+                            },
+                            child: const Text('Hapus',
+                                style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                   child: const Text('Hapus semua'),
                 ),
               ],

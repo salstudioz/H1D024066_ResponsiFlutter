@@ -15,13 +15,109 @@ import 'widgets/weather_art.dart';
 
 /// Screen 1: Home / Weather Screen.
 /// Desain modern dengan dukungan penuh Light Mode (pastel gradient hero),
-/// Dark Mode (obsidian slate + glowing accents), serta toggle satuan suhu (°C/°F).
+/// Dark Mode (obsidian slate + glowing accents), toggle satuan suhu (°C/°F),
+/// prakiraan per jam horizontal, dan dialog info pengembang.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   void _openSearch(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const SearchScreen()),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: isDark ? const Color(0xFF151C2C) : Colors.white,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1E283D)
+                    : const Color(0xFFEFF6FF),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.cloud_sync,
+                color: isDark
+                    ? const Color(0xFF60A5FA)
+                    : const Color(0xFF2563EB),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Aplikasi Cuaca',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Proyek Responsi Pemrograman Mobile (Flutter)',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            _infoRow('Nama', 'Salma Faizatul Jannah', isDark),
+            _infoRow('NIM', 'H1D024066', isDark),
+            _infoRow('Shift', 'Shift Awal H / Shift Akhir D', isDark),
+            _infoRow('Arsitektur', 'MVVM Pattern', isDark),
+            _infoRow('State', 'Provider + ChangeNotifier', isDark),
+            _infoRow('Local Storage', 'SharedPreferences', isDark),
+            _infoRow('API Service', 'Open-Meteo REST API', isDark),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Tutup',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _infoRow(String label, String value, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 95,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B),
+              ),
+            ),
+          ),
+          const Text(': ', style: TextStyle(fontSize: 12)),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -154,7 +250,14 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.search),
             onPressed: () => _openSearch(context),
           ),
-          const SizedBox(width: 8),
+
+          // Tombol Info Pengembang & Aplikasi
+          IconButton(
+            tooltip: 'Tentang Aplikasi',
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => _showAboutDialog(context),
+          ),
+          const SizedBox(width: 6),
         ],
       ),
       body: _buildBody(context, vm),
@@ -201,7 +304,7 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Kartu Cuaca Utama
+                      // 1. Kartu Cuaca Utama
                       _HeroWeatherCard(
                         location: location,
                         weather: weather,
@@ -209,15 +312,24 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
 
-                      // Banner Insight / Tips Cuaca
+                      // 2. Banner Insight / Tips Cuaca
                       _WeatherInsightBanner(weather: weather),
                       const SizedBox(height: 16),
 
-                      // 6 Kartu Informasi Tambahan (Grid responsif)
+                      // 3. Prakiraan Tiap Jam (Hourly Forecast strip)
+                      if (weather.upcomingHourly.isNotEmpty) ...[
+                        _HourlyForecastStrip(
+                          hourly: weather.upcomingHourly,
+                          vm: vm,
+                        ),
+                        const SizedBox(height: 18),
+                      ],
+
+                      // 4. 6 Kartu Informasi Tambahan (Grid responsif)
                       _DetailGrid(weather: weather, vm: vm),
                       const SizedBox(height: 24),
 
-                      // Judul Prakiraan 7 Hari
+                      // 5. Judul Prakiraan 7 Hari
                       Row(
                         children: [
                           const Icon(Icons.calendar_month, size: 20),
@@ -230,7 +342,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // Daftar Prakiraan 7 Hari
+                      // 6. Daftar Prakiraan 7 Hari
                       _ForecastList(daily: weather.daily, vm: vm),
                       const SizedBox(height: 24),
                     ],
@@ -626,6 +738,122 @@ class _WeatherInsightBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Prakiraan cuaca tiap jam secara horizontal (terinspirasi dari referensi desain)
+class _HourlyForecastStrip extends StatelessWidget {
+  const _HourlyForecastStrip({required this.hourly, required this.vm});
+
+  final List<HourlyForecast> hourly;
+  final WeatherViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.access_time_filled, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Prakiraan Tiap Jam',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 110,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: hourly.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final item = hourly[index];
+              final isCurrent = index == 0;
+              final timeText =
+                  isCurrent ? 'Sekarang' : DateFormat('HH:mm').format(item.time);
+              final iconData = WeatherCode.fromCode(item.weatherCode).icon;
+
+              return Container(
+                width: 72,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: isCurrent
+                      ? (isDark
+                          ? const Color(0xFF2563EB)
+                          : const Color(0xFF3B82F6))
+                      : (isDark ? const Color(0xFF151C2C) : Colors.white),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isCurrent
+                        ? Colors.transparent
+                        : (isDark
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : const Color(0xFFE2E8F0)),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isCurrent
+                          ? const Color(0xFF2563EB).withValues(alpha: 0.3)
+                          : Colors.black
+                              .withValues(alpha: isDark ? 0.15 : 0.03),
+                      blurRadius: isCurrent ? 12 : 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text(
+                      timeText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            isCurrent ? FontWeight.w700 : FontWeight.w500,
+                        color: isCurrent
+                            ? Colors.white
+                            : (isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B)),
+                      ),
+                    ),
+                    Icon(
+                      iconData,
+                      size: 24,
+                      color: isCurrent
+                          ? Colors.white
+                          : (isDark
+                              ? const Color(0xFF60A5FA)
+                              : const Color(0xFF2563EB)),
+                    ),
+                    Text(
+                      vm.formatDegree(item.temperature),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isCurrent
+                            ? Colors.white
+                            : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
