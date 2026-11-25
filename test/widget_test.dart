@@ -60,6 +60,18 @@ class FakeWeatherRepository extends WeatherRepository {
 
   @override
   Future<void> saveLastLocation(LocationModel location) async {}
+
+  @override
+  Future<String?> getThemeMode() async => null;
+
+  @override
+  Future<void> saveThemeMode(String mode) async {}
+
+  @override
+  Future<bool> getIsFahrenheit() async => false;
+
+  @override
+  Future<void> saveIsFahrenheit(bool isFahrenheit) async {}
 }
 
 void main() {

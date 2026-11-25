@@ -27,6 +27,7 @@ class WeatherViewModel extends ChangeNotifier {
   String _errorMessage = '';
   int _requestId = 0;
   ThemeMode _themeMode = ThemeMode.light;
+  bool _isFahrenheit = false;
 
   ViewState get state => _state;
   LocationModel? get location => _location;
@@ -34,16 +35,48 @@ class WeatherViewModel extends ChangeNotifier {
   String get errorMessage => _errorMessage;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
+  bool get isFahrenheit => _isFahrenheit;
+  String get unitSymbol => _isFahrenheit ? '°F' : '°C';
 
-  /// Mengganti tema (Light <-> Dark mode).
+  /// Konversi suhu dari Celsius ke Fahrenheit jika aktif
+  double convertTemp(double celsius) =>
+      _isFahrenheit ? (celsius * 9 / 5) + 32 : celsius;
+
+  /// Format teks suhu lengkap: misal "31°C" atau "88°F"
+  String formatTemp(double celsius) =>
+      '${convertTemp(celsius).round()}°${_isFahrenheit ? 'F' : 'C'}';
+
+  /// Format teks derajat saja: misal "31°"
+  String formatDegree(double celsius) => '${convertTemp(celsius).round()}°';
+
+  /// Mengganti tema (Light <-> Dark mode) dan menyimpan ke SharedPreferences.
   void toggleTheme() {
     _themeMode =
         _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    _repository
+        .saveThemeMode(_themeMode == ThemeMode.dark ? 'dark' : 'light')
+        .ignore();
     notifyListeners();
   }
 
-  /// Dipanggil saat aplikasi dibuka: tampilkan kembali lokasi terakhir.
+  /// Mengganti satuan suhu (°C <-> °F) dan menyimpan ke SharedPreferences.
+  void toggleUnit() {
+    _isFahrenheit = !_isFahrenheit;
+    _repository.saveIsFahrenheit(_isFahrenheit).ignore();
+    notifyListeners();
+  }
+
+  /// Dipanggil saat aplikasi dibuka: tampilkan preferensi tema, satuan, dan lokasi terakhir.
   Future<void> init() async {
+    final savedTheme = await _repository.getThemeMode();
+    if (savedTheme == 'dark') {
+      _themeMode = ThemeMode.dark;
+    } else if (savedTheme == 'light') {
+      _themeMode = ThemeMode.light;
+    }
+
+    _isFahrenheit = await _repository.getIsFahrenheit();
+
     final saved = await _repository.getLastLocation();
     await loadWeather(saved ?? defaultLocation);
   }

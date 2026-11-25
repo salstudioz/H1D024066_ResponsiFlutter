@@ -37,4 +37,14 @@ class WeatherRepository {
 
   Future<void> saveLastLocation(LocationModel location) =>
       _storage.saveLastLocation(location);
+
+  // ----- Preferensi Tema & Satuan Suhu -----
+  Future<String?> getThemeMode() => _storage.loadThemeMode();
+
+  Future<void> saveThemeMode(String mode) => _storage.saveThemeMode(mode);
+
+  Future<bool> getIsFahrenheit() => _storage.loadIsFahrenheit();
+
+  Future<void> saveIsFahrenheit(bool isFahrenheit) =>
+      _storage.saveIsFahrenheit(isFahrenheit);
 }

@@ -5,11 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/location_model.dart';
 
 /// Lapisan penyimpanan lokal (SharedPreferences).
-/// Menyimpan: lokasi favorit, riwayat pencarian, dan lokasi terakhir dilihat.
+/// Menyimpan: lokasi favorit, riwayat pencarian, lokasi terakhir dilihat,
+/// preferensi tema (Light/Dark), dan preferensi satuan suhu (Celsius/Fahrenheit).
 class LocalStorageService {
   static const String _favoritesKey = 'favorite_locations';
   static const String _historyKey = 'search_history';
   static const String _lastLocationKey = 'last_location';
+  static const String _themeModeKey = 'app_theme_mode';
+  static const String _unitKey = 'is_fahrenheit';
 
   Future<List<LocationModel>> loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
@@ -55,5 +58,27 @@ class LocalStorageService {
   Future<void> saveLastLocation(LocationModel location) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastLocationKey, jsonEncode(location.toJson()));
+  }
+
+  // ----- Preferensi Tema -----
+  Future<String?> loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_themeModeKey);
+  }
+
+  Future<void> saveThemeMode(String mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_themeModeKey, mode);
+  }
+
+  // ----- Preferensi Satuan Suhu -----
+  Future<bool> loadIsFahrenheit() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_unitKey) ?? false;
+  }
+
+  Future<void> saveIsFahrenheit(bool isFahrenheit) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_unitKey, isFahrenheit);
   }
 }

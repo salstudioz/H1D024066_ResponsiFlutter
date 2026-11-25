@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -13,8 +14,8 @@ import 'widgets/message_view.dart';
 import 'widgets/weather_art.dart';
 
 /// Screen 1: Home / Weather Screen.
-/// Desain modern dengan dukungan penuh Light Mode (pastel gradient hero)
-/// dan Dark Mode (obsidian slate + glowing accents).
+/// Desain modern dengan dukungan penuh Light Mode (pastel gradient hero),
+/// Dark Mode (obsidian slate + glowing accents), serta toggle satuan suhu (°C/°F).
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -92,6 +93,37 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
         actions: [
+          // Tombol ganti satuan suhu (°C / °F)
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: vm.toggleUnit,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1E283D)
+                    : const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : const Color(0xFFDBEAFE),
+                ),
+              ),
+              child: Text(
+                vm.unitSymbol,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? const Color(0xFF60A5FA)
+                      : const Color(0xFF2563EB),
+                ),
+              ),
+            ),
+          ),
+
           // Tombol ganti tema (Light / Dark mode)
           IconButton(
             tooltip: 'Ganti tema',
@@ -100,6 +132,7 @@ class HomeScreen extends StatelessWidget {
             ),
             onPressed: vm.toggleTheme,
           ),
+
           if (location != null)
             IconButton(
               tooltip: search.isFavorite(location)
@@ -115,6 +148,7 @@ class HomeScreen extends StatelessWidget {
               ),
               onPressed: () => _toggleFavorite(context, search, location),
             ),
+
           IconButton(
             tooltip: 'Cari kota',
             icon: const Icon(Icons.search),
@@ -171,6 +205,7 @@ class HomeScreen extends StatelessWidget {
                       _HeroWeatherCard(
                         location: location,
                         weather: weather,
+                        vm: vm,
                       ),
                       const SizedBox(height: 14),
 
@@ -179,7 +214,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 16),
 
                       // 6 Kartu Informasi Tambahan (Grid responsif)
-                      _DetailGrid(weather: weather),
+                      _DetailGrid(weather: weather, vm: vm),
                       const SizedBox(height: 24),
 
                       // Judul Prakiraan 7 Hari
@@ -196,7 +231,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 12),
 
                       // Daftar Prakiraan 7 Hari
-                      _ForecastList(daily: weather.daily),
+                      _ForecastList(daily: weather.daily, vm: vm),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -211,14 +246,18 @@ class HomeScreen extends StatelessWidget {
 
 /// Kartu Hero Utama dengan gradien dinamis dan ilustrasi layered art
 class _HeroWeatherCard extends StatelessWidget {
-  const _HeroWeatherCard({required this.location, required this.weather});
+  const _HeroWeatherCard({
+    required this.location,
+    required this.weather,
+    required this.vm,
+  });
 
   final LocationModel location;
   final WeatherModel weather;
+  final WeatherViewModel vm;
 
   List<Color> _getGradient(int code, bool isDark) {
     if (isDark) {
-      // Dark mode: Deep obsidian / midnight atmosphere
       if (code == 0 || code == 1) {
         return const [Color(0xFF131C2E), Color(0xFF1E2C44)];
       } else if (code >= 95) {
@@ -228,18 +267,13 @@ class _HeroWeatherCard extends StatelessWidget {
       }
       return const [Color(0xFF141C2B), Color(0xFF1F2B3E)];
     } else {
-      // Light mode: Vibrant & pastel gradients
       if (code == 0 || code == 1) {
-        // Cerah / Sunny (Orange / Peach glow seperti referensi)
         return const [Color(0xFFFF753E), Color(0xFFFFA258)];
       } else if (code == 2 || code == 3) {
-        // Berawan (Sky blue pastel)
         return const [Color(0xFF3389F1), Color(0xFF62A9FF)];
       } else if (code >= 95) {
-        // Badai (Deep violet slate)
         return const [Color(0xFF4A4468), Color(0xFF6B628E)];
       } else if (code >= 51 && code <= 67) {
-        // Hujan (Cyan blue to marine)
         return const [Color(0xFF2E7FD8), Color(0xFF56A6F5)];
       }
       return const [Color(0xFF3389F1), Color(0xFF5EA6FF)];
@@ -277,7 +311,7 @@ class _HeroWeatherCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Background ambient light ring
+          // Ambient light ring
           Positioned(
             right: -20,
             top: -20,
@@ -347,7 +381,7 @@ class _HeroWeatherCard extends StatelessWidget {
 
                 // Suhu Utama Besar
                 Text(
-                  '${current.temperature.round()}°C',
+                  vm.formatTemp(current.temperature),
                   style: const TextStyle(
                     fontSize: 64,
                     fontWeight: FontWeight.w700,
@@ -386,7 +420,7 @@ class _HeroWeatherCard extends StatelessWidget {
 
                 // Terasa seperti
                 Text(
-                  'Terasa seperti ${current.apparentTemperature.round()}°C',
+                  'Terasa seperti ${vm.formatTemp(current.apparentTemperature)}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13,
@@ -598,9 +632,10 @@ class _WeatherInsightBanner extends StatelessWidget {
 
 /// Grid detail 6 kartu informasi dengan circular meters / modern styling
 class _DetailGrid extends StatelessWidget {
-  const _DetailGrid({required this.weather});
+  const _DetailGrid({required this.weather, required this.vm});
 
   final WeatherModel weather;
+  final WeatherViewModel vm;
 
   @override
   Widget build(BuildContext context) {
@@ -645,8 +680,8 @@ class _DetailGrid extends StatelessWidget {
       _DetailCardData(
         icon: Icons.thermostat,
         label: 'Suhu terasa',
-        value: '${current.apparentTemperature.round()}°C',
-        subtitle: 'Suhu aktual ${current.temperature.round()}°C',
+        value: vm.formatTemp(current.apparentTemperature),
+        subtitle: 'Suhu aktual ${vm.formatTemp(current.temperature)}',
         meterFraction:
             ((current.apparentTemperature - 10) / 35).clamp(0.0, 1.0),
         accentColor: const Color(0xFFFB923C),
@@ -656,7 +691,7 @@ class _DetailGrid extends StatelessWidget {
         label: 'Min / Maks hari ini',
         value: today == null
             ? '-'
-            : '${today.minTemp.round()}° / ${today.maxTemp.round()}°',
+            : '${vm.formatDegree(today.minTemp)} / ${vm.formatDegree(today.maxTemp)}',
         subtitle: 'Variasi suhu harian',
         meterFraction: 0.65,
         accentColor: const Color(0xFFA78BFA),
@@ -745,17 +780,9 @@ class _ModernInfoCard extends StatelessWidget {
                 child: Icon(data.icon, color: data.accentColor, size: 18),
               ),
               // Mini arc meter
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  value: data.meterFraction,
-                  strokeWidth: 3,
-                  backgroundColor: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : const Color(0xFFE2E8F0),
-                  valueColor: AlwaysStoppedAnimation<Color>(data.accentColor),
-                ),
+              _ArcMeter(
+                fraction: data.meterFraction,
+                color: data.accentColor,
               ),
             ],
           ),
@@ -796,11 +823,82 @@ class _ModernInfoCard extends StatelessWidget {
   }
 }
 
+class _ArcMeter extends StatelessWidget {
+  const _ArcMeter({required this.fraction, required this.color});
+
+  final double fraction;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: CustomPaint(
+        painter: _ArcPainter(
+          fraction: fraction,
+          color: color,
+          trackColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : const Color(0xFFE2E8F0),
+        ),
+      ),
+    );
+  }
+}
+
+class _ArcPainter extends CustomPainter {
+  _ArcPainter({
+    required this.fraction,
+    required this.color,
+    required this.trackColor,
+  });
+
+  final double fraction;
+  final Color color;
+  final Color trackColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 3.0;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    final trackPaint = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    canvas.drawCircle(center, radius, trackPaint);
+
+    final sweep = 2 * math.pi * fraction.clamp(0.0, 1.0);
+    final arcPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = strokeWidth;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      sweep,
+      false,
+      arcPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArcPainter oldDelegate) =>
+      oldDelegate.fraction != fraction ||
+      oldDelegate.color != color ||
+      oldDelegate.trackColor != trackColor;
+}
+
 /// Daftar perkiraan harian 7 hari bergaya modern capsule
 class _ForecastList extends StatelessWidget {
-  const _ForecastList({required this.daily});
+  const _ForecastList({required this.daily, required this.vm});
 
   final List<DailyForecast> daily;
+  final WeatherViewModel vm;
 
   @override
   Widget build(BuildContext context) {
@@ -923,7 +1021,7 @@ class _ForecastList extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '${daily[i].maxTemp.round()}°',
+                          vm.formatDegree(daily[i].maxTemp),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -933,7 +1031,7 @@ class _ForecastList extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          ' / ${daily[i].minTemp.round()}°',
+                          ' / ${vm.formatDegree(daily[i].minTemp)}',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
