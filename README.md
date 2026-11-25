@@ -4,7 +4,10 @@ Aplikasi cuaca berbasis **Flutter + Dart** yang mengambil data dari **Open-Meteo
 (Forecast API + Geocoding API), menggunakan arsitektur **MVVM**, state management **Provider**,
 dan penyimpanan lokal **SharedPreferences**.
 
-> **Nama / NIM:** Salma Faizatul Jannah / H1D024066
+> **Nama:** Salma Faizatul Jannah  
+> **NIM:** H1D024066  
+> **Shift Awal:** Shift H  
+> **Shift Akhir:** Shift D  
 
 ## Screenshot Aplikasi
 
