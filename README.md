@@ -6,28 +6,35 @@ dan penyimpanan lokal **SharedPreferences**.
 
 > **Nama / NIM:** Salma Faizatul Jannah / H1D024066
 
-## Screenshot
+## Screenshot (iPhone 16 Pro Max Viewport)
+
+### Light Mode
 
 | Home / Weather Screen | Search / Location Screen | Favorit & Riwayat |
-|---|---|---|
-| ![Home](screenshots/home.png) | ![Search](screenshots/search.png) | ![Favorit](screenshots/favorites.png) |
+|:---:|:---:|:---:|
+| <img src="screenshots/home.png" width="280" alt="Home Light Mode" /> | <img src="screenshots/search.png" width="280" alt="Search Light Mode" /> | <img src="screenshots/favorites.png" width="280" alt="Favorites Light Mode" /> |
 
-> Letakkan file screenshot Anda di folder `screenshots/` dengan nama di atas
-> (lihat petunjuk di file panduan).
+### Dark Mode
+
+| Home / Weather Screen | Search / Location Screen | Favorit & Riwayat |
+|:---:|:---:|:---:|
+| <img src="screenshots/home_dark.png" width="280" alt="Home Dark Mode" /> | <img src="screenshots/search_dark.png" width="280" alt="Search Dark Mode" /> | <img src="screenshots/favorites_dark.png" width="280" alt="Favorites Dark Mode" /> |
 
 ## Fitur
 
 - Cuaca terkini: nama kota, kondisi cuaca (ikon + teks), suhu, suhu terasa.
-- Informasi tambahan: kelembapan, kecepatan angin, peluang hujan, curah hujan, suhu min/maks.
-- Perkiraan cuaca 7 hari ke depan.
+- **Hourly Forecast**: Perkiraan cuaca per jam (24 jam) dengan scroll horizontal dan indikator waktu aktif.
+- Informasi parameter cuaca lengkap: Kelembapan, kecepatan angin, peluang hujan, curah hujan, tekanan udara, indeks UV, dan meteran busur visual (*arc visual indicators*).
+- Perkiraan cuaca 7 hari ke depan dengan rentang suhu min/maks dan peluang hujan.
 - Pencarian kota ke Geocoding API (dengan debounce 500 ms).
 - Simpan lokasi **favorit** dan **riwayat pencarian** (SharedPreferences) - tampil kembali saat aplikasi dibuka.
 - Lokasi terakhir yang dilihat otomatis dimuat saat aplikasi dibuka.
 - Penanganan state **loading**, **data kosong**, dan **error** (tombol "Coba lagi").
 - Tarik ke bawah untuk memuat ulang (pull-to-refresh).
 - Material 3, Theme terang/gelap otomatis & manual dengan tombol toggle (tersimpan di SharedPreferences).
-- Pilihan satuan suhu (°C / °F) yang dapat diubah dan tersimpan di SharedPreferences.
-- Ilustrasi cuaca modern bergaya berlapis (*layered vector art*).
+- Pilihan satuan suhu (°C / °F) yang dapat diubah secara instan dan tersimpan di SharedPreferences.
+- Dialog informasi identitas pengembang & aplikasi (About Dialog).
+- Ikon aplikasi kustom modern di semua platform (Android, iOS, Web).
 - Tampilan responsif (HP & layar lebar) via LayoutBuilder & ConstrainedBox.
 
 ## Struktur Proyek (MVVM)
