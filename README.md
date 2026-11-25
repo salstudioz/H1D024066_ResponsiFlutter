@@ -25,7 +25,10 @@ dan penyimpanan lokal **SharedPreferences**.
 - Lokasi terakhir yang dilihat otomatis dimuat saat aplikasi dibuka.
 - Penanganan state **loading**, **data kosong**, dan **error** (tombol "Coba lagi").
 - Tarik ke bawah untuk memuat ulang (pull-to-refresh).
-- Material 3, Theme terang/gelap otomatis, tampilan responsif (HP & layar lebar).
+- Material 3, Theme terang/gelap otomatis & manual dengan tombol toggle (tersimpan di SharedPreferences).
+- Pilihan satuan suhu (°C / °F) yang dapat diubah dan tersimpan di SharedPreferences.
+- Ilustrasi cuaca modern bergaya berlapis (*layered vector art*).
+- Tampilan responsif (HP & layar lebar) via LayoutBuilder & ConstrainedBox.
 
 ## Struktur Proyek (MVVM)
 
