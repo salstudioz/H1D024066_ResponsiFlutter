@@ -35,20 +35,20 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: isDark ? const Color(0xFF151C2C) : Colors.white,
         title: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF1E283D)
-                    : const Color(0xFFEFF6FF),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.cloud_sync,
-                color: isDark
-                    ? const Color(0xFF60A5FA)
-                    : const Color(0xFF2563EB),
-                size: 24,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(
+                'assets/icon/app_icon.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.cloud,
+                  color: isDark
+                      ? const Color(0xFF60A5FA)
+                      : const Color(0xFF2563EB),
+                  size: 28,
+                ),
               ),
             ),
             const SizedBox(width: 12),
