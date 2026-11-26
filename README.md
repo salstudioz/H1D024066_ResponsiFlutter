@@ -118,4 +118,5 @@ flutter test
 
 ## Video Penjelasan
 
+- **Link Video YouTube:** https://youtu.be/COhnsACnJzs
 
